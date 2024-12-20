@@ -31,7 +31,7 @@ Expr FalseSyntax ::parse(Assoc &env) { return Expr(new False()); }
 
 Expr List ::parse(Assoc &env) {
     if (stxs.empty()) {
-        return Expr(new MakeVoid());
+        throw RuntimeError("错啦");
     }
     auto op = dynamic_cast<Identifier *>(stxs[0].get())->s;
     if (primitives.find(op) != primitives.end()) {
@@ -40,32 +40,32 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Minus(stxs[1]->parse(env),
-                                          stxs[2]->parse(env)));
+                    return Expr(
+                        new Minus(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_PLUS:
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Plus(stxs[1]->parse(env),
-                                         stxs[2]->parse(env)));
+                    return Expr(
+                        new Plus(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_MUL:
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Mult(stxs[1]->parse(env),
-                                         stxs[2]->parse(env)));
+                    return Expr(
+                        new Mult(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_GT:
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Greater(stxs[1]->parse(env),
-                                            stxs[2]->parse(env)));
+                    return Expr(
+                        new Greater(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_GE:
@@ -80,24 +80,24 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Less(stxs[1]->parse(env),
-                                         stxs[2]->parse(env)));
+                    return Expr(
+                        new Less(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_LE:
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new LessEq(stxs[1]->parse(env),
-                                           stxs[2]->parse(env)));
+                    return Expr(
+                        new LessEq(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_EQ:
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Equal(stxs[1]->parse(env),
-                                          stxs[2]->parse(env)));
+                    return Expr(
+                        new Equal(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
                 break;
             case E_VOID:
@@ -118,8 +118,8 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Cons(stxs[1]->parse(env),
-                                         stxs[2]->parse(env)));
+                    return Expr(
+                        new Cons(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
             case E_CAR:
                 if (stxs.size() != 2) {

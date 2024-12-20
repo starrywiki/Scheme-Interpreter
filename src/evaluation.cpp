@@ -57,8 +57,8 @@ Value Quote::eval(Assoc &e) {
                     (Expr(new Quote(islists->stxs[2]))).get()->eval(e));
             }
         }
-        Value res = (Expr(new Quote(islists->stxs[len-1]))).get()->eval(e);
-        for (int i = len - 2; i >= 0; --i) {
+        Value res = NullV();
+        for (int i = len - 1; i >= 0; --i) {
             res =
                 PairV((Expr(new Quote(islists->stxs[i]))).get()->eval(e), res);
         }
