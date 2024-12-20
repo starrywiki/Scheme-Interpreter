@@ -35,6 +35,7 @@ class SharedPtr {
         return *this;
     }
 
+
     // Destructor
     ~SharedPtr() {
         if (ucount && (--(*ucount) == 0)) {
