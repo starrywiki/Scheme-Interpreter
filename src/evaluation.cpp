@@ -33,38 +33,36 @@ Value Begin::eval(Assoc &e) {}  // begin expression
 
 Value Quote::eval(Assoc &e) {
     auto istrue = dynamic_cast<TrueSyntax *>(s.get());
-    auto isfalse = dynamic_cast<TrueSyntax *>(s.get());
+    auto isfalse = dynamic_cast<FalseSyntax *>(s.get());
     auto isnum = dynamic_cast<Number *>(s.get());
-    auto ispair = dynamic_cast<Pair *>(s.get());
     auto issymbol = dynamic_cast<Identifier *>(s.get());
-    auto issymbols = dynamic_cast<List *>(s.get());
+    auto islists = dynamic_cast<List *>(s.get());
     if (istrue) {
         return BooleanV(true);
     } else if (isfalse) {
         return BooleanV(true);
     } else if (isnum) {
         return IntegerV(isnum->n);
-    } else if (ispair) {
-        return PairV(ispair->car, ispair->cdr);
     } else if (issymbol) {
         return SymbolV(issymbol->s);
-    } else if (issymbols) {
-        int len = issymbols->stxs.size();
+    } else if (islists) {
+        int len = islists->stxs.size();
         if (len == 0) {
             return NullV();
-        } else if (len == 3 &&
-                   dynamic_cast<Identifier *>(issymbols->stxs[1].get())->s ==
-                       ".") {
-            return PairV((Expr(new Quote(issymbols->stxs[0]))).get()->eval(e),
-                         (Expr(new Quote(issymbols->stxs[2]))).get()->eval(e));
-        } else {
-            Value res = NullV();
-            for (int i = len - 1; i >= 0; --i) {
-                res = PairV(
-                    (Expr(new Quote(issymbols->stxs[i]))).get()->eval(e), res);
+        } else if (len == 3) {
+            auto dot = dynamic_cast<Identifier *>(islists->stxs[1].get());
+            if (dot && dot->s == ".") {
+                return PairV(
+                    (Expr(new Quote(islists->stxs[0]))).get()->eval(e),
+                    (Expr(new Quote(islists->stxs[2]))).get()->eval(e));
             }
-            return res;
         }
+        Value res = (Expr(new Quote(islists->stxs[len-1]))).get()->eval(e);
+        for (int i = len - 2; i >= 0; --i) {
+            res =
+                PairV((Expr(new Quote(islists->stxs[i]))).get()->eval(e), res);
+        }
+        return res;
     } else {
         return NullV();
     }
@@ -78,7 +76,9 @@ Value Binary::eval(Assoc &e) {
     return evalRator(rand1.get()->eval(e), rand2.get()->eval(e));
 }  // evaluation of two-operators primitive
 
-Value Unary::eval(Assoc &e) {}  // evaluation of single-operator primitive
+Value Unary::eval(Assoc &e) {
+    return evalRator(rand.get()->eval(e));
+}  // evaluation of single-operator primitive
 
 Value Mult::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
@@ -167,9 +167,17 @@ Value IsProcedure::evalRator(const Value &rand) {}  // procedure?
 Value Not::evalRator(const Value &rand) {}  // not
 
 Value Car::evalRator(const Value &rand) {
-    return Value(dynamic_cast<Pair *>(rand.get())->car);
+    auto pair = dynamic_cast<Pair *>(rand.get());
+    if (!pair) {
+        throw std::runtime_error("car: Argument is not a pair");
+    }
+    return Value(pair->car);
 }  // car
 
 Value Cdr::evalRator(const Value &rand) {
-    return Value(dynamic_cast<Pair *>(rand.get())->cdr);
+    auto pair = dynamic_cast<Pair *>(rand.get());
+    if (!pair) {
+        throw std::runtime_error("cdr: Argument is not a pair");
+    }
+    return Value(pair->cdr);
 }  // cdr

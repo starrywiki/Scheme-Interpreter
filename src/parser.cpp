@@ -118,20 +118,20 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 3) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Cons(stxs[1].parse(env),
-                                         stxs[2].parse(env)));
+                    return Expr(new Cons(stxs[1]->parse(env),
+                                         stxs[2]->parse(env)));
                 }
             case E_CAR:
                 if (stxs.size() != 2) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Car(stxs[1].parse(env)));
+                    return Expr(new Car(stxs[1]->parse(env)));
                 }
             case E_CDR:
                 if (stxs.size() != 2) {
                     throw RuntimeError("错啦");
                 } else {
-                    return Expr(new Cdr(stxs[1].parse(env)));
+                    return Expr(new Cdr(stxs[1]->parse(env)));
                 }
 
             default:
