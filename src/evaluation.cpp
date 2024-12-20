@@ -43,7 +43,7 @@ Value Quote::eval(Assoc &e) {
         return BooleanV(true);
     } else if (isnum) {
         return IntegerV(isnum->n);
-    } else if (issymbol) {
+    } else if (issymbol && issymbol->s != ".") {
         return SymbolV(issymbol->s);
     } else if (islists) {
         int len = islists->stxs.size();
@@ -59,6 +59,11 @@ Value Quote::eval(Assoc &e) {
         }
         Value res = NullV();
         for (int i = len - 1; i >= 0; --i) {
+            if (i == len - 2 &&
+                dynamic_cast<Identifier *>(islists->stxs[len - 2].get())->s ==
+                    ".") {
+                continue;
+            }
             res =
                 PairV((Expr(new Quote(islists->stxs[i]))).get()->eval(e), res);
         }
