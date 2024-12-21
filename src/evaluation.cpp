@@ -26,28 +26,14 @@ Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
 Value If::eval(Assoc &e) {  //未实现未定义变量的报错
     auto firstv = cond->eval(e);
     auto secondv = conseq->eval(e);
-    auto thirdv = cond->eval(e);
-    auto it = dynamic_cast<Integer *>(firstv.get());
-    auto itt = dynamic_cast<Void *>(firstv.get());
-    if (itt) {
-        return conseq->eval(e);
-    }
-    if (it) {
-        if (it->n == 0) {
-            return conseq->eval(e);
-        }
-        if (it->n == 1) {
-            return alter->eval(e);
-        }
-    }
-    if (firstv->v_type != V_BOOL) {
-        throw RuntimeError("戳啦");
+    auto thirdv = alter->eval(e);
+    // auto is2sym = dynamic_cast<Var *>(secondv.get());
+    // auto is3sym = dynamic_cast<Var *>(thirdv.get());
+    auto it = dynamic_cast<Boolean *>(firstv.get());
+    if (it && it->b == false) {
+        return thirdv;
     } else {
-        if (dynamic_cast<Boolean *>(firstv.get())->b == true) {
-            return conseq->eval(e);
-        } else {
-            return alter->eval(e);
-        }
+        return secondv;
     }
 }  // if expression
 
@@ -199,7 +185,9 @@ Value Greater::evalRator(const Value &rand1, const Value &rand2) {
 }  // >
 
 Value IsEq::evalRator(const Value &rand1, const Value &rand2) {
-    if (rand1->v_type == V_INT && rand2->v_type == V_INT) {
+    if (rand1.get() == rand2.get()) {
+        return BooleanV(true);
+    } else if (rand1->v_type == V_INT && rand2->v_type == V_INT) {
         int num1 = dynamic_cast<Integer *>(rand1.get())->n;
         int num2 = dynamic_cast<Integer *>(rand2.get())->n;
         if (num1 == num2) {
@@ -226,8 +214,6 @@ Value IsEq::evalRator(const Value &rand1, const Value &rand2) {
     } else if (rand1->v_type == V_VOID && rand2->v_type == V_VOID) {
         return BooleanV(true);
     } else if (rand1->v_type == V_NULL && rand2->v_type == V_NULL) {
-        return BooleanV(true);
-    } else if (rand1.get() == rand2.get()) {
         return BooleanV(true);
     } else {
         return BooleanV(false);
@@ -282,18 +268,10 @@ Value IsProcedure::evalRator(const Value &rand) {}  // procedure?
 
 Value Not::evalRator(const Value &rand) {
     auto isv = dynamic_cast<Boolean *>(rand.get());
-    auto isvoid = dynamic_cast<Void *>(rand.get());
-    if (isvoid) {
+    if (isv && isv->b == false) {
+        return BooleanV(true);
+    } else{
         return BooleanV(false);
-    }
-    if (!isv) {
-        throw RuntimeError("戳啦");
-    } else {
-        if (isv->b == true) {
-            return BooleanV(false);
-        } else {
-            return BooleanV(true);
-        }
     }
 }  // not
 
