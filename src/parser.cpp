@@ -141,7 +141,6 @@ Expr List ::parse(Assoc &env) {
                     throw RuntimeError("错啦");
                 }else{
                     return Expr(new Not(stxs[1]->parse(env)));
-
                 }
             default:
                 break;

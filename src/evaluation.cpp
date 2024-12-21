@@ -75,7 +75,7 @@ Value Quote::eval(Assoc &e) {
     if (istrue) {
         return BooleanV(true);
     } else if (isfalse) {
-        return BooleanV(true);
+        return BooleanV(false);
     } else if (isnum) {
         return IntegerV(isnum->n);
     } else if (issymbol) {
