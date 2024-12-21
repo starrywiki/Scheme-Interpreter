@@ -142,6 +142,54 @@ Expr List ::parse(Assoc &env) {
                 }else{
                     return Expr(new Not(stxs[1]->parse(env)));
                 }
+                break;
+            case E_INTQ:
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                } else{
+                    return Expr(new IsFixnum(stxs[1]->parse(env)));
+                }
+                break;
+            case E_BOOLQ:
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                } else{
+                    return Expr(new IsBoolean(stxs[1]->parse(env)));
+                }
+                break;
+            case E_NULLQ:
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                } else{
+                    return Expr(new IsNull(stxs[1]->parse(env)));
+                }
+                break;
+            case E_PAIRQ:
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                } else{
+                    return Expr(new IsPair(stxs[1]->parse(env)));
+                }
+                break;
+            case E_SYMBOLQ:
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                } else{
+                    return Expr(new IsSymbol(stxs[1]->parse(env)));
+                }
+                break;
+            case E_EQQ:
+                if(stxs.size()!=3){
+                    throw RuntimeError("错啦");
+                } else{
+                    return Expr(new IsEq(stxs[1]->parse(env),stxs[2]->parse(env)));
+                }
+                break;
+            case E_PROCQ: //?
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                }
+                break;
             default:
                 break;
         }

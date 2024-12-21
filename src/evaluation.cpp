@@ -198,30 +198,98 @@ Value Greater::evalRator(const Value &rand1, const Value &rand2) {
     return BooleanV(false);
 }  // >
 
-Value IsEq::evalRator(const Value &rand1, const Value &rand2) {}  // eq?
+Value IsEq::evalRator(const Value &rand1, const Value &rand2) {
+    if (rand1->v_type == V_INT && rand2->v_type == V_INT) {
+        int num1 = dynamic_cast<Integer *>(rand1.get())->n;
+        int num2 = dynamic_cast<Integer *>(rand2.get())->n;
+        if (num1 == num2) {
+            return BooleanV(true);
+        } else {
+            return BooleanV(false);
+        }
+    } else if (rand1->v_type == V_BOOL && rand2->v_type == V_BOOL) {
+        bool bool1 = dynamic_cast<Boolean *>(rand1.get())->b;
+        bool bool2 = dynamic_cast<Boolean *>(rand1.get())->b;
+        if (bool1 == bool2) {
+            return BooleanV(true);
+        } else {
+            return BooleanV(false);
+        }
+    } else if (rand1->v_type == V_SYM && rand2->v_type == V_SYM) {
+        std::string sym1 = dynamic_cast<Symbol *>(rand1.get())->s;
+        std::string sym2 = dynamic_cast<Symbol *>(rand1.get())->s;
+        if (sym1 == sym2) {
+            return BooleanV(true);
+        } else {
+            return BooleanV(false);
+        }
+    } else if (rand1->v_type == V_VOID && rand2->v_type == V_VOID) {
+        return BooleanV(true);
+    } else if (rand1->v_type == V_NULL && rand2->v_type == V_NULL) {
+        return BooleanV(true);
+    } else if (rand1.get() == rand2.get()) {
+        return BooleanV(true);
+    } else {
+        return BooleanV(false);
+    }
+}  // eq?
 
 Value Cons::evalRator(const Value &rand1, const Value &rand2) {
     return PairV(rand1, rand2);
 }  // cons
 
-Value IsBoolean::evalRator(const Value &rand) {}  // boolean?
+Value IsBoolean::evalRator(const Value &rand) {
+    if (rand->v_type == V_BOOL) {
+        return BooleanV(true);
+    } else {
+        return BooleanV(false);
+    }
+}  // boolean?
 
-Value IsFixnum::evalRator(const Value &rand) {}  // fixnum?
+Value IsFixnum::evalRator(const Value &rand) {
+    if (rand->v_type == V_INT) {
+        return BooleanV(true);
+    } else {
+        return BooleanV(false);
+    }
+}  // fixnum?
 
-Value IsSymbol::evalRator(const Value &rand) {}  // symbol?
+Value IsSymbol::evalRator(const Value &rand) {
+    if (rand->v_type == V_SYM) {
+        return BooleanV(true);
+    } else {
+        return BooleanV(false);
+    }
+}  // symbol?
 
-Value IsNull::evalRator(const Value &rand) {}  // null?
+Value IsNull::evalRator(const Value &rand) {
+    if (rand->v_type == V_NULL) {
+        return BooleanV(true);
+    } else {
+        return BooleanV(false);
+    }
+}  // null?
 
-Value IsPair::evalRator(const Value &rand) {}  // pair?
+Value IsPair::evalRator(const Value &rand) {
+    if (rand->v_type == V_PAIR) {
+        return BooleanV(true);
+    } else {
+        return BooleanV(false);
+    }
+}  // pair?
 
 Value IsProcedure::evalRator(const Value &rand) {}  // procedure?
 
 Value Not::evalRator(const Value &rand) {
-    auto v = dynamic_cast<Boolean *>(rand.get());
-    if (!v) {
+    auto isv = dynamic_cast<Boolean *>(rand.get());
+    auto isvoid = dynamic_cast<Void *>(rand.get());
+    if (isvoid) {
+        return BooleanV(false);
+    }
+    if (!isv) {
         throw RuntimeError("戳啦");
     } else {
-        if (v->b == true) {
+        if (isv->b == true) {
             return BooleanV(false);
         } else {
             return BooleanV(true);
