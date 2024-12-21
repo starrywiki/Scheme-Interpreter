@@ -23,13 +23,48 @@ Value Var::eval(Assoc &e) {}  // evaluation of variable
 
 Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
 
-Value If::eval(Assoc &e) {}  // if expression
+Value If::eval(Assoc &e) {  //未实现未定义变量的报错
+    auto firstv = cond->eval(e);
+    auto secondv = conseq->eval(e);
+    auto thirdv = cond->eval(e);
+    auto it = dynamic_cast<Integer *>(firstv.get());
+    auto itt = dynamic_cast<Void *>(firstv.get());
+    if (itt) {
+        return conseq->eval(e);
+    }
+    if (it) {
+        if (it->n == 0) {
+            return conseq->eval(e);
+        }
+        if (it->n == 1) {
+            return alter->eval(e);
+        }
+    }
+    if (firstv->v_type != V_BOOL) {
+        throw RuntimeError("戳啦");
+    } else {
+        if (dynamic_cast<Boolean *>(firstv.get())->b == true) {
+            return conseq->eval(e);
+        } else {
+            return alter->eval(e);
+        }
+    }
+}  // if expression
 
 Value True::eval(Assoc &e) { return BooleanV(true); }  // evaluation of #t
 
 Value False::eval(Assoc &e) { return BooleanV(false); }  // evaluation of #f
 
-Value Begin::eval(Assoc &e) {}  // begin expression
+Value Begin::eval(Assoc &e) {
+    int len = es.size();
+    if (len == 0) {
+        throw RuntimeError("戳啦");
+    }
+    for (int i = 0; i < len - 1; ++i) {
+        auto it = es[i].get()->eval(e);
+    }
+    return es[len - 1].get()->eval(e);
+}  // begin expression
 
 Value Quote::eval(Assoc &e) {
     auto istrue = dynamic_cast<TrueSyntax *>(s.get());
@@ -178,12 +213,23 @@ Value IsPair::evalRator(const Value &rand) {}  // pair?
 
 Value IsProcedure::evalRator(const Value &rand) {}  // procedure?
 
-Value Not::evalRator(const Value &rand) {}  // not
+Value Not::evalRator(const Value &rand) {
+    auto v = dynamic_cast<Boolean *>(rand.get());
+    if (!v) {
+        throw RuntimeError("戳啦");
+    } else {
+        if (v->b == true) {
+            return BooleanV(false);
+        } else {
+            return BooleanV(true);
+        }
+    }
+}  // not
 
 Value Car::evalRator(const Value &rand) {
     auto pair = dynamic_cast<Pair *>(rand.get());
     if (!pair) {
-        throw std::runtime_error("car: Argument is not a pair");
+        throw RuntimeError("戳啦");
     }
     return Value(pair->car);
 }  // car
@@ -191,7 +237,7 @@ Value Car::evalRator(const Value &rand) {
 Value Cdr::evalRator(const Value &rand) {
     auto pair = dynamic_cast<Pair *>(rand.get());
     if (!pair) {
-        throw std::runtime_error("cdr: Argument is not a pair");
+        throw RuntimeError("戳啦");
     }
     return Value(pair->cdr);
 }  // cdr

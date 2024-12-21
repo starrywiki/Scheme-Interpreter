@@ -121,19 +121,28 @@ Expr List ::parse(Assoc &env) {
                     return Expr(
                         new Cons(stxs[1]->parse(env), stxs[2]->parse(env)));
                 }
+                break;
             case E_CAR:
                 if (stxs.size() != 2) {
                     throw RuntimeError("错啦");
                 } else {
                     return Expr(new Car(stxs[1]->parse(env)));
                 }
+                break;
             case E_CDR:
                 if (stxs.size() != 2) {
                     throw RuntimeError("错啦");
                 } else {
                     return Expr(new Cdr(stxs[1]->parse(env)));
                 }
+                break;
+            case E_NOT:
+                if(stxs.size()!=2){
+                    throw RuntimeError("错啦");
+                }else{
+                    return Expr(new Not(stxs[1]->parse(env)));
 
+                }
             default:
                 break;
         }
@@ -146,7 +155,24 @@ Expr List ::parse(Assoc &env) {
                     return Expr(new Quote(stxs[1]));
                 }
                 break;
-
+            case E_BEGIN:
+                if (stxs.size() < 2) {
+                    throw RuntimeError("戳啦");
+                } else {
+                    int len = stxs.size();
+                    vector<Expr> exprs;
+                    for (int i = 1; i < len; ++i) {
+                        exprs.push_back(stxs[i]->parse(env));
+                    }
+                    return Expr(new Begin(exprs));
+                }
+                break;
+            case E_IF:
+                if (stxs.size() != 4) {
+                    throw RuntimeError("戳啦");
+                } else{
+                    return (new If(stxs[1]->parse(env),stxs[2]->parse(env),stxs[3]->parse(env)));
+                }
             default:
                 break;
         }
