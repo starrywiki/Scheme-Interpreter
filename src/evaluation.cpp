@@ -94,10 +94,13 @@ Value Quote::eval(Assoc &e) {
         }
         bool isspecial = false;
         Value res = NullV();
-        auto dotp = dynamic_cast<Identifier *>(islists->stxs[len - 2].get());
-        if (dotp && dotp->s == ".") {
-            res = (Expr(new Quote(islists->stxs[len - 1]))).get()->eval(e);
-            isspecial = true;
+        if (len >= 3) {
+            auto dotp =
+                dynamic_cast<Identifier *>(islists->stxs[len - 2].get());
+            if (dotp && dotp->s == ".") {
+                res = (Expr(new Quote(islists->stxs[len - 1]))).get()->eval(e);
+                isspecial = true;
+            }
         }
         if (isspecial) {
             for (int i = len - 3; i >= 0; --i) {
