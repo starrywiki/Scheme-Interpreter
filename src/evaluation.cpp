@@ -13,20 +13,45 @@ extern std ::map<std ::string, ExprType> reserved_words;
 
 Value Let::eval(Assoc &env) {}  // let expression
 
-Value Lambda::eval(Assoc &env) {}  // lambda expression
+Value Lambda::eval(Assoc &env) {
+    return ClosureV(x,e,env);
+}  // lambda expression
 
-Value Apply::eval(Assoc &e) {}  // for function calling
+Value Apply::eval(Assoc &e) {
+    Value rval = rator->eval(e);
+    Closure* clos = dynamic_cast<Closure*>(rval.get());
+    if(clos){
+        int len1 = clos->parameters.size();
+        int len2 = rand.size();
+        if(len1!=len2) throw RuntimeError("戳啦");
+        Assoc new_env = clos->env;
+        for(int i=0;i<len2;++i){
+            auto tmpval = rand[i]->eval(new_env);
+            new_env = extend(clos->parameters[i],tmpval,new_env);
+        }
+        return clos->e.get()->eval(new_env);
+    }else{
+        throw RuntimeError("戳啦");
+    }
+}  // for function calling
 
 Value Letrec::eval(Assoc &env) {}  // letrec expression
 
-Value Var::eval(Assoc &e) {}  // evaluation of variable
+Value Var::eval(Assoc &e) {
+    Value isexist = find(x,e);
+    if(isexist.get()==nullptr){
+        throw RuntimeError("戳啦");
+    } else{
+        return isexist;
+    }
+}  // evaluation of variable
 
 Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
 
 Value If::eval(Assoc &e) {  //未实现未定义变量的报错
-    auto firstv = cond->eval(e);
-    auto secondv = conseq->eval(e);
-    auto thirdv = alter->eval(e);
+    Value firstv = cond->eval(e);
+    Value secondv = conseq->eval(e);
+    Value thirdv = alter->eval(e);
     // auto is2sym = dynamic_cast<Var *>(secondv.get());
     // auto is3sym = dynamic_cast<Var *>(thirdv.get());
     auto it = dynamic_cast<Boolean *>(firstv.get());
@@ -264,7 +289,10 @@ Value IsPair::evalRator(const Value &rand) {
     }
 }  // pair?
 
-Value IsProcedure::evalRator(const Value &rand) {}  // procedure?
+Value IsProcedure::evalRator(const Value &rand) {
+
+
+}  // procedure?
 
 Value Not::evalRator(const Value &rand) {
     auto isv = dynamic_cast<Boolean *>(rand.get());
