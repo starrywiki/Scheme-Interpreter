@@ -53,15 +53,13 @@ Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
 
 Value If::eval(Assoc &e) {  
     Value firstv = cond->eval(e);
-    Value secondv = conseq->eval(e);
-    Value thirdv = alter->eval(e);
     // auto is2sym = dynamic_cast<Var *>(secondv.get());
     // auto is3sym = dynamic_cast<Var *>(thirdv.get());
     auto it = dynamic_cast<Boolean *>(firstv.get());
     if (it && it->b == false) {
-        return thirdv;
+        return alter->eval(e);
     } else {
-        return secondv;
+        return conseq->eval(e);
     }
 }  // if expression
 
