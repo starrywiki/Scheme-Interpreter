@@ -240,7 +240,7 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 4) {
                     throw RuntimeError("戳啦");
                 } else {
-                    return (new If(stxs[1]->parse(env), stxs[2]->parse(env),
+                    return Expr(new If(stxs[1]->parse(env), stxs[2]->parse(env),
                                    stxs[3]->parse(env)));
                 }
                 break;
