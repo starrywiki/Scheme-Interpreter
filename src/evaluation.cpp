@@ -38,6 +38,9 @@ Value Apply::eval(Assoc &e) {
 Value Letrec::eval(Assoc &env) {}  // letrec expression
 
 Value Var::eval(Assoc &e) {
+    if(std::isdigit(x[0])||x[0]=='.'||x[0]=='@'){
+        throw RuntimeError("戳啦");
+    }
     Value isexist = find(x,e);
     if(isexist.get()==nullptr){
         throw RuntimeError("戳啦");
@@ -48,7 +51,7 @@ Value Var::eval(Assoc &e) {
 
 Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
 
-Value If::eval(Assoc &e) {  //未实现未定义变量的报错
+Value If::eval(Assoc &e) {  
     Value firstv = cond->eval(e);
     Value secondv = conseq->eval(e);
     Value thirdv = alter->eval(e);
@@ -222,7 +225,7 @@ Value IsEq::evalRator(const Value &rand1, const Value &rand2) {
         }
     } else if (rand1->v_type == V_BOOL && rand2->v_type == V_BOOL) {
         bool bool1 = dynamic_cast<Boolean *>(rand1.get())->b;
-        bool bool2 = dynamic_cast<Boolean *>(rand1.get())->b;
+        bool bool2 = dynamic_cast<Boolean *>(rand2.get())->b;
         if (bool1 == bool2) {
             return BooleanV(true);
         } else {
@@ -230,7 +233,7 @@ Value IsEq::evalRator(const Value &rand1, const Value &rand2) {
         }
     } else if (rand1->v_type == V_SYM && rand2->v_type == V_SYM) {
         std::string sym1 = dynamic_cast<Symbol *>(rand1.get())->s;
-        std::string sym2 = dynamic_cast<Symbol *>(rand1.get())->s;
+        std::string sym2 = dynamic_cast<Symbol *>(rand2.get())->s;
         if (sym1 == sym2) {
             return BooleanV(true);
         } else {
@@ -290,8 +293,11 @@ Value IsPair::evalRator(const Value &rand) {
 }  // pair?
 
 Value IsProcedure::evalRator(const Value &rand) {
-
-
+    if(rand->v_type==V_PROC){
+        return BooleanV(true);
+    } else{
+        return BooleanV(false);
+    }
 }  // procedure?
 
 Value Not::evalRator(const Value &rand) {
