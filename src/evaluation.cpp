@@ -26,7 +26,7 @@ Value Apply::eval(Assoc &e) {
         if(len1!=len2) throw RuntimeError("戳啦");
         Assoc new_env = clos->env;
         for(int i=0;i<len2;++i){
-            auto tmpval = rand[i]->eval(new_env);
+            auto tmpval = rand[i]->eval(e);
             new_env = extend(clos->parameters[i],tmpval,new_env);
         }
         return clos->e.get()->eval(new_env);
