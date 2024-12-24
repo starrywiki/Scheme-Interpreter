@@ -14,44 +14,43 @@ extern std ::map<std ::string, ExprType> reserved_words;
 Value Let::eval(Assoc &env) {}  // let expression
 
 Value Lambda::eval(Assoc &env) {
-    return ClosureV(x,e,env);
+    return ClosureV(x, e, env);
 }  // lambda expression
 
 Value Apply::eval(Assoc &e) {
     Value rval = rator->eval(e);
-    Closure* clos = dynamic_cast<Closure*>(rval.get());
-    if(clos){
-        int len1 = clos->parameters.size();
-        int len2 = rand.size();
-        if(len1!=len2) throw RuntimeError("戳啦");
-        Assoc new_env = clos->env;
-        for(int i=0;i<len2;++i){
-            auto tmpval = rand[i]->eval(e);
-            new_env = extend(clos->parameters[i],tmpval,new_env);
-        }
-        return clos->e.get()->eval(new_env);
-    }else{
+    Closure *clos = dynamic_cast<Closure *>(rval.get());
+    if (!clos) {
         throw RuntimeError("戳啦");
     }
+    int len1 = clos->parameters.size();
+    int len2 = rand.size();
+    if (len1 != len2) throw RuntimeError("戳啦");
+    Assoc new_env = clos->env;
+    for (int i = 0; i < len2; ++i) {
+        auto tmpval = rand[i]->eval(e);
+        new_env = extend(clos->parameters[i], tmpval, new_env);
+    }
+    return clos->e.get()->eval(new_env);
 }  // for function calling
 
 Value Letrec::eval(Assoc &env) {}  // letrec expression
 
 Value Var::eval(Assoc &e) {
-    if(std::isdigit(x[0])||x[0]=='.'||x[0]=='@'){
+    if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {
         throw RuntimeError("戳啦");
     }
-    Value isexist = find(x,e);
-    if(isexist.get()==nullptr){
+    Value isexist = find(x, e);
+    if (isexist.get() == nullptr) {
         throw RuntimeError("戳啦");
-    } else{
+    } else {
         return isexist;
     }
 }  // evaluation of variable
 
 Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
 
-Value If::eval(Assoc &e) {  
+Value If::eval(Assoc &e) {
     Value firstv = cond->eval(e);
     // auto is2sym = dynamic_cast<Var *>(secondv.get());
     // auto is3sym = dynamic_cast<Var *>(thirdv.get());
@@ -291,9 +290,9 @@ Value IsPair::evalRator(const Value &rand) {
 }  // pair?
 
 Value IsProcedure::evalRator(const Value &rand) {
-    if(rand->v_type==V_PROC){
+    if (rand->v_type == V_PROC) {
         return BooleanV(true);
-    } else{
+    } else {
         return BooleanV(false);
     }
 }  // procedure?
@@ -302,7 +301,7 @@ Value Not::evalRator(const Value &rand) {
     auto isv = dynamic_cast<Boolean *>(rand.get());
     if (isv && isv->b == false) {
         return BooleanV(true);
-    } else{
+    } else {
         return BooleanV(false);
     }
 }  // not

@@ -26,62 +26,10 @@ Expr Syntax ::parse(Assoc &env) {}
 Expr Number ::parse(Assoc &env) { return Expr(new Fixnum(n)); }
 
 Expr Identifier ::parse(Assoc &env) {
-    if (find(s, env).get()) {
-        return Expr(new Var(s));
-    }
-    auto it = primitives[s];
-    bool numvar0 = (it == E_VOID) || (it == E_EXIT);
-    bool numvar2 = (it == E_BOOLQ) || (it == E_INTQ) || (it == E_NULLQ) ||
-                   (it == E_PAIRQ) || (it == E_PROCQ) || (it == E_SYMBOLQ) ||
-                   (it == E_NOT) || (it == E_CAR) || (it == E_CDR);
-    bool numvar3 = (it == E_MUL) || (it == E_MINUS) || (it == E_PLUS) ||
-                   (it == E_LT) || (it == E_LE) || (it == E_EQ) ||
-                   (it == E_GE) || (it == E_GT) || (it == E_EQQ) ||
-                   (it == E_CONS);
-    if (numvar0) {
-        List *st = new List();
-        st->stxs.push_back(Syntax(new Identifier("lambda")));
-
-        st->stxs.push_back(new List());
-
-        List *stx = new List();
-        stx->stxs.push_back(Syntax(new Identifier(s)));
-        st->stxs.push_back(stx);
-
-        return st->parse(env);
-    }
-
-    if (numvar3) {
-        List *args = new List();
-        args->stxs.push_back(Syntax(new Identifier("x")));
-        args->stxs.push_back(Syntax(new Identifier("y")));
-        List *stx = new List();
-        stx->stxs.push_back(Syntax(new Identifier(s)));
-        stx->stxs.push_back(Syntax(new Identifier("x")));
-        stx->stxs.push_back(Syntax(new Identifier("y")));
-        List *st = new List();
-        st->stxs.push_back(Syntax(new Identifier("lambda")));
-        st->stxs.push_back(args);
-        st->stxs.push_back(stx);
-
-        return st->parse(env);
-    }
-    if (numvar2) {
-        List *args = new List();
-        args->stxs.push_back(Syntax(new Identifier("x")));
-        List *stx = new List();
-        stx->stxs.push_back(Syntax(new Identifier(s)));
-        stx->stxs.push_back(Syntax(new Identifier("x")));
-        List *st = new List();
-        st->stxs.push_back(Syntax(new Identifier("lambda")));
-        st->stxs.push_back(args);
-        st->stxs.push_back(stx);
-
-        return st->parse(env);
-    }
     return Expr(new Var(s));
-}
-
+} 
+// (((if #t (lambda () +) (lambda () -))) 1 2)
+// ((lambda (if) false) (lambda (cond expr alter) cond))
 Expr TrueSyntax ::parse(Assoc &env) { return Expr(new True()); }
 
 Expr FalseSyntax ::parse(Assoc &env) { return Expr(new False()); }
