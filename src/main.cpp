@@ -42,8 +42,8 @@ void REPL()
     global_env = extend("car",ClosureV(var1,Expr(new Car(new Var("X"))),global_env),global_env);
     global_env = extend("cdr",ClosureV(var1,Expr(new Cdr(new Var("X"))),global_env),global_env);
     std::vector<std::string> var0;
-    global_env = extend("exit",ClosureV(var1,Expr(new Exit()),global_env),global_env);
-    global_env = extend("void",ClosureV(var1,Expr(new MakeVoid()),global_env),global_env);
+    global_env = extend("exit",ClosureV(var0,Expr(new Exit()),global_env),global_env);
+    global_env = extend("void",ClosureV(var0,Expr(new MakeVoid()),global_env),global_env);
 
     
     while (1)
