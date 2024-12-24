@@ -21,11 +21,11 @@ Value Apply::eval(Assoc &e) {
     Value rval = rator->eval(e);
     Closure *clos = dynamic_cast<Closure *>(rval.get());
     if (!clos) {
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     }
     int len1 = clos->parameters.size();
     int len2 = rand.size();
-    if (len1 != len2) throw RuntimeError("戳啦");
+    if (len1 != len2) throw RuntimeError("WA");
     Assoc new_env = clos->env;
     for (int i = 0; i < len2; ++i) {
         auto tmpval = rand[i]->eval(e);
@@ -38,11 +38,11 @@ Value Letrec::eval(Assoc &env) {}  // letrec expression
 
 Value Var::eval(Assoc &e) {
     if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     }
     Value isexist = find(x, e);
     if (isexist.get() == nullptr) {
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     } else {
         return isexist;
     }
@@ -69,7 +69,7 @@ Value False::eval(Assoc &e) { return BooleanV(false); }  // evaluation of #f
 Value Begin::eval(Assoc &e) {
     int len = es.size();
     if (len == 0) {
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     }
     for (int i = 0; i < len - 1; ++i) {
         auto it = es[i].get()->eval(e);
@@ -145,28 +145,28 @@ Value Unary::eval(Assoc &e) {
 
 Value Mult::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     return IntegerV((dynamic_cast<Integer *>(rand1.get())->n) *
                     dynamic_cast<Integer *>(rand2.get())->n);
 }  // *
 
 Value Plus::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     return IntegerV((dynamic_cast<Integer *>(rand1.get())->n) +
                     dynamic_cast<Integer *>(rand2.get())->n);
 }  // +
 
 Value Minus::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     return IntegerV((dynamic_cast<Integer *>(rand1.get())->n) -
                     dynamic_cast<Integer *>(rand2.get())->n);
 }  // -
 
 Value Less::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     int num1 = dynamic_cast<Integer *>(rand1.get())->n;
     int num2 = dynamic_cast<Integer *>(rand2.get())->n;
     if (num1 < num2) return BooleanV(true);
@@ -175,7 +175,7 @@ Value Less::evalRator(const Value &rand1, const Value &rand2) {
 
 Value LessEq::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     int num1 = dynamic_cast<Integer *>(rand1.get())->n;
     int num2 = dynamic_cast<Integer *>(rand2.get())->n;
     if (num1 <= num2) return BooleanV(true);
@@ -184,7 +184,7 @@ Value LessEq::evalRator(const Value &rand1, const Value &rand2) {
 
 Value Equal::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     int num1 = dynamic_cast<Integer *>(rand1.get())->n;
     int num2 = dynamic_cast<Integer *>(rand2.get())->n;
     if (num1 == num2) return BooleanV(true);
@@ -193,7 +193,7 @@ Value Equal::evalRator(const Value &rand1, const Value &rand2) {
 
 Value GreaterEq::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     int num1 = dynamic_cast<Integer *>(rand1.get())->n;
     int num2 = dynamic_cast<Integer *>(rand2.get())->n;
     if (num1 >= num2) return BooleanV(true);
@@ -202,7 +202,7 @@ Value GreaterEq::evalRator(const Value &rand1, const Value &rand2) {
 
 Value Greater::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1->v_type != V_INT || rand2->v_type != V_INT)
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     int num1 = dynamic_cast<Integer *>(rand1.get())->n;
     int num2 = dynamic_cast<Integer *>(rand2.get())->n;
     if (num1 > num2) return BooleanV(true);
@@ -309,7 +309,7 @@ Value Not::evalRator(const Value &rand) {
 Value Car::evalRator(const Value &rand) {
     auto pair = dynamic_cast<Pair *>(rand.get());
     if (!pair) {
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     }
     return Value(pair->car);
 }  // car
@@ -317,7 +317,7 @@ Value Car::evalRator(const Value &rand) {
 Value Cdr::evalRator(const Value &rand) {
     auto pair = dynamic_cast<Pair *>(rand.get());
     if (!pair) {
-        throw RuntimeError("戳啦");
+        throw RuntimeError("WA");
     }
     return Value(pair->cdr);
 }  // cdr
