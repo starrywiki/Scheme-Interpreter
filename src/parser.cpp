@@ -21,13 +21,16 @@ using std ::vector;
 extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
-Expr Syntax ::parse(Assoc &env) {}
+Expr Syntax ::parse(Assoc &env) {
+    if (get() == nullptr) throw RuntimeError("unexpected EOF");
+    return get()->parse(env);
+}
 
 Expr Number ::parse(Assoc &env) { return Expr(new Fixnum(n)); }
 
 Expr Identifier ::parse(Assoc &env) {
     return Expr(new Var(s));
-} 
+}
 // (((if #t (lambda () +) (lambda () -))) 1 2)
 // ((lambda (if) false) (lambda (cond expr alter) cond))
 Expr TrueSyntax ::parse(Assoc &env) { return Expr(new True()); }
@@ -39,7 +42,7 @@ Expr List ::parse(Assoc &env) {
         throw RuntimeError("WA");
     }
     auto id = dynamic_cast<Identifier *>(stxs[0].get());
-    if (!id) {
+    if (id==nullptr) {
         int len = stxs.size();
         Expr ex = stxs[0]->parse(env);
         std::vector<Expr> exs;
@@ -49,7 +52,7 @@ Expr List ::parse(Assoc &env) {
         return Expr(new Apply(ex, exs));
     }
     string op = id->s;
-    if (find(op, env).get()) {
+    if (find(op, env).get()!=nullptr) {
         std::vector<Expr> exprs;
         for (int i = 1; i < stxs.size(); ++i) {
             exprs.push_back(stxs[i]->parse(env));
@@ -218,7 +221,8 @@ Expr List ::parse(Assoc &env) {
             default:
                 break;
         }
-    } else if (reserved_words.find(op) != reserved_words.end()) {
+    }
+    if (reserved_words.find(op) != reserved_words.end()) {
         switch (reserved_words[op]) {
             case E_QUOTE:
                 if (stxs.size() != 2) {
@@ -261,28 +265,25 @@ Expr List ::parse(Assoc &env) {
                     int len = varstxs.size();
                     Assoc new_env = env;
                     for (int i = 0; i < len; ++i) {
-                        auto it = dynamic_cast<Identifier *>(varstxs[i].get());
-                        if (find(it->s, env).get() ==
-                            nullptr) {  // to be modified
-                            new_env = extend(it->s, VoidV(), new_env);
-                        }
-                        vars.push_back(it->s);
+                        string s = dynamic_cast<Identifier *>(varstxs[i].get())->s;
+                        vars.push_back(s);
+                        if(!find(s,env).get()) //?
+                        new_env = extend(s, Value(nullptr), new_env);
                     }
-                    return (new Lambda(vars, stxs[2]->parse(env)));
+                    return Expr(new Lambda(vars, stxs[2]->parse(new_env)));
                 }
                 break;
             default:
                 throw RuntimeError("WA");
                 break;
         }
-    } else {
-        int len = stxs.size();
-        Expr ex = stxs[0]->parse(env);
-        std::vector<Expr> exs;
-        for (int i = 1; i < len; ++i) {
-            exs.push_back(stxs[i]->parse(env));
-        }
-        return Expr(new Apply(ex, exs));
     }
+    int len = stxs.size();
+    Expr ex = stxs[0]->parse(env);
+    std::vector<Expr> exs;
+    for (int i = 1; i < len; ++i) {
+        exs.push_back(stxs[i]->parse(env));
+    }
+    return Expr(new Apply(ex, exs));
 }
 #endif

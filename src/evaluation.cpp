@@ -11,7 +11,13 @@
 extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
-Value Let::eval(Assoc &env) {}  // let expression
+Value Let::eval(Assoc &env) {
+    Assoc env1 = env;
+    for (auto &i : bind) {
+        env1 = extend(i.first, i.second.get()->eval(env), env1);
+    }
+    return body.get()->eval(env1);
+}  // let expression
 
 Value Lambda::eval(Assoc &env) {
     return ClosureV(x, e, env);
@@ -27,14 +33,39 @@ Value Apply::eval(Assoc &e) {
     int len2 = rand.size();
     if (len1 != len2) throw RuntimeError("WA");
     Assoc new_env = clos->env;
+    std::vector<Value> varss;
     for (int i = 0; i < len2; ++i) {
         auto tmpval = rand[i]->eval(e);
-        new_env = extend(clos->parameters[i], tmpval, new_env);
+        varss.push_back(tmpval);
     }
-    return clos->e.get()->eval(new_env);
+    for (int i = 0; i < len2; ++i) {
+        new_env = extend(clos->parameters[i], varss[i], new_env);
+    }
+    return (clos->e)->eval(new_env);
 }  // for function calling
 
-Value Letrec::eval(Assoc &env) {}  // letrec expression
+Value Letrec::eval(Assoc &env) {
+    Assoc env1 = env;
+  for (auto &i : this->bind) {
+    env1 = extend(i.first, NullV(), env1);
+  }
+
+  Assoc env2 = env;
+
+  for (auto &i : this->bind) {
+    Value val = i.second.get()->eval(env1);
+    if (val.get()->v_type == V_NULL)
+      throw RuntimeError("Unusable variable");
+    env2 = extend(i.first, val, env2);
+  }
+
+  for (auto &i : this->bind) {
+    Value val = find(i.first, env2);    
+    modify(i.first, i.second.get()->eval(env2), env2);
+  }
+
+  return body.get()->eval(env2);
+}  // letrec expression
 
 Value Var::eval(Assoc &e) {
     if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {
