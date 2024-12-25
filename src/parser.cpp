@@ -12,7 +12,7 @@
 #include "expr.hpp"
 #include "syntax.hpp"
 #include "value.hpp"
-#include "Debug.hpp"
+//#include "Debug.hpp"
 
 #define mp make_pair
 using std ::pair;
