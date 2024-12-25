@@ -11,13 +11,7 @@
 extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
-Value Let::eval(Assoc &env) {
-    Assoc env1 = env;
-    for (auto &i : bind) {
-        env1 = extend(i.first, i.second.get()->eval(env), env1);
-    }
-    return body.get()->eval(env1);
-}  // let expression
+Value Let::eval(Assoc &env) {}  // let expression
 
 Value Lambda::eval(Assoc &env) {
     return ClosureV(x, e, env);
@@ -44,28 +38,7 @@ Value Apply::eval(Assoc &e) {
     return (clos->e)->eval(new_env);
 }  // for function calling
 
-Value Letrec::eval(Assoc &env) {
-    Assoc env1 = env;
-  for (auto &i : this->bind) {
-    env1 = extend(i.first, NullV(), env1);
-  }
-
-  Assoc env2 = env;
-
-  for (auto &i : this->bind) {
-    Value val = i.second.get()->eval(env1);
-    if (val.get()->v_type == V_NULL)
-      throw RuntimeError("Unusable variable");
-    env2 = extend(i.first, val, env2);
-  }
-
-  for (auto &i : this->bind) {
-    Value val = find(i.first, env2);    
-    modify(i.first, i.second.get()->eval(env2), env2);
-  }
-
-  return body.get()->eval(env2);
-}  // letrec expression
+Value Letrec::eval(Assoc &env) {}  // letrec expression
 
 Value Var::eval(Assoc &e) {
     if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {

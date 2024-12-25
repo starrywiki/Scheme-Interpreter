@@ -28,11 +28,8 @@ Expr Syntax ::parse(Assoc &env) {
 
 Expr Number ::parse(Assoc &env) { return Expr(new Fixnum(n)); }
 
-Expr Identifier ::parse(Assoc &env) {
-    return Expr(new Var(s));
-}
-// (((if #t (lambda () +) (lambda () -))) 1 2)
-// ((lambda (if) false) (lambda (cond expr alter) cond))
+Expr Identifier ::parse(Assoc &env) { return Expr(new Var(s)); }
+
 Expr TrueSyntax ::parse(Assoc &env) { return Expr(new True()); }
 
 Expr FalseSyntax ::parse(Assoc &env) { return Expr(new False()); }
@@ -42,7 +39,7 @@ Expr List ::parse(Assoc &env) {
         throw RuntimeError("WA");
     }
     auto id = dynamic_cast<Identifier *>(stxs[0].get());
-    if (id==nullptr) {
+    if (id == nullptr) {
         int len = stxs.size();
         Expr ex = stxs[0]->parse(env);
         std::vector<Expr> exs;
@@ -52,7 +49,7 @@ Expr List ::parse(Assoc &env) {
         return Expr(new Apply(ex, exs));
     }
     string op = id->s;
-    if (find(op, env).get()!=nullptr) {
+    if (find(op, env).get() != nullptr) {
         std::vector<Expr> exprs;
         for (int i = 1; i < stxs.size(); ++i) {
             exprs.push_back(stxs[i]->parse(env));
@@ -265,25 +262,27 @@ Expr List ::parse(Assoc &env) {
                     int len = varstxs.size();
                     Assoc new_env = env;
                     for (int i = 0; i < len; ++i) {
-                        string s = dynamic_cast<Identifier *>(varstxs[i].get())->s;
+                        string s =
+                            dynamic_cast<Identifier *>(varstxs[i].get())->s;
                         vars.push_back(s);
-                        if(!find(s,env).get()) //?
-                        new_env = extend(s, Value(nullptr), new_env);
+                        if (!find(s, env).get())  //?
+                            new_env = extend(s, Value(nullptr), new_env);
                     }
                     return Expr(new Lambda(vars, stxs[2]->parse(new_env)));
                 }
                 break;
+
             default:
                 throw RuntimeError("WA");
                 break;
         }
     }
-    int len = stxs.size();
+    /*int len = stxs.size();
     Expr ex = stxs[0]->parse(env);
     std::vector<Expr> exs;
     for (int i = 1; i < len; ++i) {
         exs.push_back(stxs[i]->parse(env));
     }
-    return Expr(new Apply(ex, exs));
+    return Expr(new Apply(ex, exs));*/
 }
 #endif
