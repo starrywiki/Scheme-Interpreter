@@ -1,7 +1,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
-
+//#include "Debug.hpp"
 #include "Def.hpp"
 #include "RE.hpp"
 #include "expr.hpp"
@@ -11,7 +11,40 @@
 extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
-Value Let::eval(Assoc &env) {}  // let expression
+Value Let::eval(Assoc &env) {
+    int len = bind.size();
+    Assoc new_env = env;
+    for (int i = 0; i < len; ++i) {
+        new_env = extend(bind[i].first, bind[i].second->eval(env), new_env);
+    }
+    return body->eval(new_env);
+}  // let expression
+
+Value Letrec::eval(Assoc &env) {
+    int len = bind.size();
+    //DEBUG_PRINT("Entering Letrec::eval with " << len << " bindings.");
+    Assoc e1 = env;
+    Assoc e2 = env;
+    //DEBUG_PRINT("Step 1: Initializing bindings with Value(nullptr).");
+    for (int i = 0; i < len; ++i) {
+        //DEBUG_PRINT("Initializing " << bind[i].first << " with Value(nullptr).");
+        e1 = extend(bind[i].first,Value(nullptr), e1);
+    }
+     //DEBUG_PRINT("Step 2: Evaluating bindings in extended environment e1.");
+    for (int i = 0; i < len; ++i) {
+        //DEBUG_PRINT("Evaluating binding " << bind[i].first << ".");
+        auto var = bind[i].second->eval(e1);
+        e2 = extend(bind[i].first, var, e2);
+    }
+    //DEBUG_PRINT("Step 3: Modifying bindings in environment e2.");
+    for (int i = 0; i < len; ++i) {
+        //DEBUG_PRINT("Modifying binding " << bind[i].first << ".");
+        auto var = bind[i].second->eval(e2);
+        modify(bind[i].first, var, e2);
+    }
+    //DEBUG_PRINT("Evaluating body expression.");
+    return body->eval(e2);
+}  // letrec expression
 
 Value Lambda::eval(Assoc &env) {
     return ClosureV(x, e, env);
@@ -37,8 +70,6 @@ Value Apply::eval(Assoc &e) {
     }
     return (clos->e)->eval(new_env);
 }  // for function calling
-
-Value Letrec::eval(Assoc &env) {}  // letrec expression
 
 Value Var::eval(Assoc &e) {
     if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {

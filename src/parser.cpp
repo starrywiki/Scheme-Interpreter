@@ -23,42 +23,43 @@ extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
 Expr Syntax ::parse(Assoc &env) {
-    //DEBUG_PRINT("Entering Syntax::parse");
+    // DEBUG_PRINT("Entering Syntax::parse");
     if (get() == nullptr) throw RuntimeError("unexpected EOF");
     return get()->parse(env);
 }
 
 Expr Number ::parse(Assoc &env) { return Expr(new Fixnum(n)); }
 
-Expr Identifier ::parse(Assoc &env) { 
-    //DEBUG_PRINT("Parsing Identifier: " << s);
-    return Expr(new Var(s)); }
+Expr Identifier ::parse(Assoc &env) {
+    // DEBUG_PRINT("Parsing Identifier: " << s);
+    return Expr(new Var(s));
+}
 
 Expr TrueSyntax ::parse(Assoc &env) { return Expr(new True()); }
 
 Expr FalseSyntax ::parse(Assoc &env) { return Expr(new False()); }
 
 Expr List ::parse(Assoc &env) {
-    //DEBUG_PRINT("Parsing List with " << stxs.size() << " elements");
+    // DEBUG_PRINT("Parsing List with " << stxs.size() << " elements");
     if (stxs.empty()) {
         throw RuntimeError("WA");
     }
     auto id = dynamic_cast<Identifier *>(stxs[0].get());
     if (id == nullptr) {
-        //DEBUG_PRINT("List first element is not an Identifier");
+        // DEBUG_PRINT("List first element is not an Identifier");
         int len = stxs.size();
         Expr ex = stxs[0]->parse(env);
         std::vector<Expr> exs;
         for (int i = 1; i < len; ++i) {
             exs.push_back(stxs[i]->parse(env));
         }
-        //DEBUG_PRINT("Creating Apply expression");
+        // DEBUG_PRINT("Creating Apply expression");
         return Expr(new Apply(ex, exs));
     }
     string op = id->s;
-    //DEBUG_PRINT("List operator: " << op);
+    // DEBUG_PRINT("List operator: " << op);
     if (find(op, env).get() != nullptr) {
-        //DEBUG_PRINT("Operator found in environment: " << op);
+        // DEBUG_PRINT("Operator found in environment: " << op);
         std::vector<Expr> exprs;
         for (int i = 1; i < stxs.size(); ++i) {
             exprs.push_back(stxs[i]->parse(env));
@@ -66,7 +67,7 @@ Expr List ::parse(Assoc &env) {
         return Expr(new Apply(stxs[0]->parse(env), exprs));
     }
     if (primitives.find(op) != primitives.end()) {
-        //DEBUG_PRINT("Operator is a primitive: " << op);
+        // DEBUG_PRINT("Operator is a primitive: " << op);
         switch (primitives[op]) {
             case E_MINUS:
                 if (stxs.size() != 3) {
@@ -230,7 +231,7 @@ Expr List ::parse(Assoc &env) {
         }
     }
     if (reserved_words.find(op) != reserved_words.end()) {
-        //DEBUG_PRINT("Operator is a reserved word: " << op);
+        // DEBUG_PRINT("Operator is a reserved word: " << op);
         switch (reserved_words[op]) {
             case E_QUOTE:
                 if (stxs.size() != 2) {
@@ -252,7 +253,7 @@ Expr List ::parse(Assoc &env) {
                 }
                 break;
             case E_IF:
-                //DEBUG_PRINT("Handling E_IF");
+                // DEBUG_PRINT("Handling E_IF");
                 if (stxs.size() != 4) {
                     throw RuntimeError("WA");
                 } else {
@@ -261,12 +262,59 @@ Expr List ::parse(Assoc &env) {
                 }
                 break;
             case E_LET:
-
+                if (stxs.size() != 3) {
+                    throw RuntimeError("WA");
+                } else {
+                    auto list = dynamic_cast<List *>(stxs[1].get());
+                    if (list) {
+                        Assoc new_env = env;
+                        std ::vector<std ::pair<std ::string, Expr>> to_bind;
+                        int len = list->stxs.size();
+                        for (int i = 0; i < len; ++i) {
+                            auto tmp =
+                                dynamic_cast<List *>(list->stxs[i].get());
+                            if ((tmp->stxs).size() != 2)
+                                throw RuntimeError("WA");
+                            auto tmpexpr = tmp->stxs[1]->parse(env);
+                            auto tmpvar = 
+                                dynamic_cast<Identifier *>(tmp->stxs[0].get());
+                            if (!tmpvar) throw RuntimeError("WA");
+                            new_env = extend(tmpvar->s,VoidV(),new_env);
+                            to_bind.push_back(std::mp(tmpvar->s, tmpexpr));
+                        }
+                        return Expr(new Let(to_bind, stxs[2]->parse(new_env)));
+                    } else
+                        throw RuntimeError("WA");
+                }
                 break;
-            case E_LETREC:
+            case E_LETREC: //?
+                if (stxs.size() != 3) {
+                    throw RuntimeError("WA");
+                } else {
+                    auto list = dynamic_cast<List *>(stxs[1].get());
+                    if (list) {
+                        Assoc new_env = env;
+                        std ::vector<std ::pair<std ::string, Expr>> to_bind;
+                        int len = list->stxs.size();
+                        for (int i = 0; i < len; ++i) {
+                            auto tmp =
+                                dynamic_cast<List *>((list->stxs[i]).get());
+                            if ((tmp->stxs).size() != 2)
+                                throw RuntimeError("WA");
+                            auto tmpexpr = tmp->stxs[1]->parse(env);
+                            auto tmpvar = 
+                                dynamic_cast<Identifier *>(tmp->stxs[0].get());
+                            if (!tmpvar) throw RuntimeError("WA");
+                            new_env = extend(tmpvar->s,Value(nullptr),new_env);
+                            to_bind.push_back(std::mp(tmpvar->s, tmpexpr));
+                        }
+                        return Expr(new Letrec(to_bind, stxs[2]->parse(new_env)));
+                    } else
+                        throw RuntimeError("WA");
+                }
                 break;
-            case E_LAMBDA:  // not finished？
-                //DEBUG_PRINT("Handling E_LAMBDA");
+            case E_LAMBDA:  // not finished?
+                // DEBUG_PRINT("Handling E_LAMBDA");
                 if (stxs.size() != 3) {
                     throw RuntimeError("WA");
                 } else {
@@ -278,12 +326,11 @@ Expr List ::parse(Assoc &env) {
                         string s =
                             dynamic_cast<Identifier *>(varstxs[i].get())->s;
                         vars.push_back(s);
-                        new_env = extend(s, VoidV(), new_env);
+                        new_env = extend(s, NullV(), new_env);
                     }
                     return Expr(new Lambda(vars, stxs[2]->parse(new_env)));
                 }
                 break;
-
             default:
                 throw RuntimeError("WA");
                 break;
