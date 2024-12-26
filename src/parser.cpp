@@ -326,7 +326,7 @@ Expr List ::parse(Assoc &env) {
                         string s =
                             dynamic_cast<Identifier *>(varstxs[i].get())->s;
                         vars.push_back(s);
-                        new_env = extend(s, NullV(), new_env);
+                        new_env = extend(s, VoidV(), new_env);
                     }
                     return Expr(new Lambda(vars, stxs[2]->parse(new_env)));
                 }
