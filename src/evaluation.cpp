@@ -1,7 +1,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
-//#include "Debug.hpp"
+#include "Debug.hpp"
 #include "Def.hpp"
 #include "RE.hpp"
 #include "expr.hpp"
@@ -12,6 +12,7 @@ extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
 Value Let::eval(Assoc &env) {
+    DEBUG_PRINT("Entering Let::eval");
     int len = bind.size();
     Assoc new_env = env;
     for (int i = 0; i < len; ++i) {
@@ -22,35 +23,37 @@ Value Let::eval(Assoc &env) {
 
 Value Letrec::eval(Assoc &env) {
     int len = bind.size();
-    //DEBUG_PRINT("Entering Letrec::eval with " << len << " bindings.");
+    DEBUG_PRINT("Entering Letrec::eval with " << len << " bindings.");
     Assoc e1 = env;
     Assoc e2 = env;
-    //DEBUG_PRINT("Step 1: Initializing bindings with Value(nullptr).");
+    DEBUG_PRINT("Step 1: Initializing bindings with Value(nullptr).");
     for (int i = 0; i < len; ++i) {
-        //DEBUG_PRINT("Initializing " << bind[i].first << " with Value(nullptr).");
+        DEBUG_PRINT("Initializing " << bind[i].first << " with Value(nullptr).");
         e1 = extend(bind[i].first,Value(nullptr), e1);
     }
-     //DEBUG_PRINT("Step 2: Evaluating bindings in extended environment e1.");
+     DEBUG_PRINT("Step 2: Evaluating bindings in extended environment e1.");
     for (int i = 0; i < len; ++i) {
-        //DEBUG_PRINT("Evaluating binding " << bind[i].first << ".");
+        DEBUG_PRINT("Evaluating binding " << bind[i].first << ".");
         auto var = bind[i].second->eval(e1);
         e2 = extend(bind[i].first, var, e2);
     }
-    //DEBUG_PRINT("Step 3: Modifying bindings in environment e2.");
+    DEBUG_PRINT("Step 3: Modifying bindings in environment e2.");
     for (int i = 0; i < len; ++i) {
-        //DEBUG_PRINT("Modifying binding " << bind[i].first << ".");
+        DEBUG_PRINT("Modifying binding " << bind[i].first << ".");
         auto var = bind[i].second->eval(e2);
         modify(bind[i].first, var, e2);
     }
-    //DEBUG_PRINT("Evaluating body expression.");
+    DEBUG_PRINT("Evaluating body expression.");
     return body->eval(e2);
 }  // letrec expression
 
 Value Lambda::eval(Assoc &env) {
+    DEBUG_PRINT("Entering Lambda::eval");
     return ClosureV(x, e, env);
 }  // lambda expression
 
 Value Apply::eval(Assoc &e) {
+    DEBUG_PRINT("Entering Apply::eval");
     Value rval = rator->eval(e);
     Closure *clos = dynamic_cast<Closure *>(rval.get());
     if (!clos) {
@@ -63,6 +66,7 @@ Value Apply::eval(Assoc &e) {
     std::vector<Value> varss;
     for (int i = 0; i < len2; ++i) {
         auto tmpval = rand[i]->eval(e);
+        DEBUG_PRINT("Evaluated argument " << i << ", value type: " << tmpval->v_type);
         varss.push_back(tmpval);
     }
     for (int i = 0; i < len2; ++i) {
@@ -72,6 +76,7 @@ Value Apply::eval(Assoc &e) {
 }  // for function calling
 
 Value Var::eval(Assoc &e) {
+    DEBUG_PRINT("Entering Var::eval");
     if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {
         throw RuntimeError("WA");
     }
@@ -83,9 +88,12 @@ Value Var::eval(Assoc &e) {
     }
 }  // evaluation of variable
 
-Value Fixnum::eval(Assoc &e) { return IntegerV(n); }  // evaluation of a fixnum
+Value Fixnum::eval(Assoc &e) { 
+    DEBUG_PRINT("Entering Fixnum::eval");
+    return IntegerV(n); }  // evaluation of a fixnum
 
 Value If::eval(Assoc &e) {
+    DEBUG_PRINT("Entering IF::eval");
     Value firstv = cond->eval(e);
     // auto is2sym = dynamic_cast<Var *>(secondv.get());
     // auto is3sym = dynamic_cast<Var *>(thirdv.get());
@@ -102,6 +110,7 @@ Value True::eval(Assoc &e) { return BooleanV(true); }  // evaluation of #t
 Value False::eval(Assoc &e) { return BooleanV(false); }  // evaluation of #f
 
 Value Begin::eval(Assoc &e) {
+    DEBUG_PRINT("Entering Begin::eval");
     int len = es.size();
     if (len == 0) {
         throw RuntimeError("WA");
@@ -113,6 +122,7 @@ Value Begin::eval(Assoc &e) {
 }  // begin expression
 
 Value Quote::eval(Assoc &e) {
+    DEBUG_PRINT("Entering Quote::eval");
     auto istrue = dynamic_cast<TrueSyntax *>(s.get());
     auto isfalse = dynamic_cast<FalseSyntax *>(s.get());
     auto isnum = dynamic_cast<Number *>(s.get());
