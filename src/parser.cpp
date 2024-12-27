@@ -49,7 +49,7 @@ Expr List ::parse(Assoc &env) {
     }
 
     // Check if the first element is an identifier
-    auto id = dynamic_cast<Identifier *>(stxs[0].get());
+    Identifier* id = dynamic_cast<Identifier *>(stxs[0].get());
     if (id == nullptr) {
         DEBUG_PRINT("List first element is not an Identifier");
         int len = stxs.size();
@@ -278,7 +278,7 @@ Expr List ::parse(Assoc &env) {
                     throw RuntimeError("WA");
                 } else {
                     // Parse the list of variable bindings
-                    auto list = dynamic_cast<List *>(stxs[1].get());
+                    List* list = dynamic_cast<List *>(stxs[1].get());
                     if (list) {
                         Assoc new_env = env;
                         // Store variable bindings
@@ -286,13 +286,13 @@ Expr List ::parse(Assoc &env) {
                         int len = list->stxs.size();
                         for (int i = 0; i < len; ++i) {
                             // Parse each binding in the form (var value)
-                            auto tmp =
+                            List* tmp =
                                 dynamic_cast<List *>(list->stxs[i].get());
                             if ((tmp->stxs).size() != 2)
                                 throw RuntimeError("WA");
                             // Parse the value expression in the initial environment    
-                            auto tmpexpr = tmp->stxs[1]->parse(env);
-                            auto tmpvar =
+                            Expr tmpexpr = tmp->stxs[1]->parse(env);
+                            Identifier* tmpvar =
                                 dynamic_cast<Identifier *>(tmp->stxs[0].get());
                             if (!tmpvar) throw RuntimeError("WA");
                             // Extend the environment with the variable
@@ -309,18 +309,18 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 3) {
                     throw RuntimeError("WA");
                 } else {
-                    auto list = dynamic_cast<List *>(stxs[1].get());
+                    List* list = dynamic_cast<List *>(stxs[1].get());
                     if (list) {
                         Assoc new_env = env;
                         std ::vector<std ::pair<std ::string, Expr>> to_bind;
                         int len = list->stxs.size();
                         // First pass: Add all variables with uninitialized bindings (VoidV)
                         for (int i = 0; i < len; ++i) {
-                            auto tmp =
+                            List* tmp =
                                 dynamic_cast<List *>((list->stxs[i]).get());
                             if ((tmp->stxs).size() != 2)
                                 throw RuntimeError("WA");
-                            auto tmpvar =
+                            Identifier* tmpvar =
                                 dynamic_cast<Identifier *>(tmp->stxs[0].get());
                             if (!tmpvar) throw RuntimeError("WA");
                             // Add uninitialized variable to the environment
@@ -330,11 +330,11 @@ Expr List ::parse(Assoc &env) {
 
                         // Second pass: Parse and bind values in the updated environment
                         for (int i = 0; i < len; ++i) {
-                            auto tmp =
+                            List* tmp =
                                 dynamic_cast<List *>((list->stxs[i]).get());
-                            auto tmpvar =
+                            Identifier* tmpvar =
                                 dynamic_cast<Identifier *>(tmp->stxs[0].get());
-                            auto tmpexpr = tmp->stxs[1]->parse(new_env);
+                            Expr tmpexpr = tmp->stxs[1]->parse(new_env);
                             // Store the binding
                             to_bind.push_back(std::mp(tmpvar->s, tmpexpr));
                         }
