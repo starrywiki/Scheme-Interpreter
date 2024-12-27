@@ -1,6 +1,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
+
 #include "Debug.hpp"
 #include "Def.hpp"
 #include "RE.hpp"
@@ -11,6 +12,7 @@
 extern std ::map<std ::string, ExprType> primitives;
 extern std ::map<std ::string, ExprType> reserved_words;
 
+// by creating a new environment with bindings and evaluating the body
 Value Let::eval(Assoc &env) {
     DEBUG_PRINT("Entering Let::eval");
     int len = bind.size();
@@ -21,37 +23,42 @@ Value Let::eval(Assoc &env) {
     return body->eval(new_env);
 }  // let expression
 
+// Evaluates a `Letrec` expression by initializing bindings to `nullptr`, then
+// updating them iteratively
 Value Letrec::eval(Assoc &env) {
     int len = bind.size();
     DEBUG_PRINT("Entering Letrec::eval with " << len << " bindings.");
-    Assoc e1 = env;
-    Assoc e2 = env;
+    Assoc e1 = env;  // Intermediate environment
+    Assoc e2 = env;  // Final extended environment
     DEBUG_PRINT("Step 1: Initializing bindings with Value(nullptr).");
     for (int i = 0; i < len; ++i) {
-        DEBUG_PRINT("Initializing " << bind[i].first << " with Value(nullptr).");
-        e1 = extend(bind[i].first,Value(nullptr), e1);
+        DEBUG_PRINT("Initializing " << bind[i].first
+                                    << " with Value(nullptr).");
+        e1 = extend(bind[i].first, Value(nullptr), e1);
     }
-     DEBUG_PRINT("Step 2: Evaluating bindings in extended environment e1.");
+    DEBUG_PRINT("Step 2: Evaluating bindings in extended environment e1.");
     for (int i = 0; i < len; ++i) {
         DEBUG_PRINT("Evaluating binding " << bind[i].first << ".");
-        auto var = bind[i].second->eval(e1);
+        Value var = bind[i].second->eval(e1);
         e2 = extend(bind[i].first, var, e2);
     }
     DEBUG_PRINT("Step 3: Modifying bindings in environment e2.");
     for (int i = 0; i < len; ++i) {
         DEBUG_PRINT("Modifying binding " << bind[i].first << ".");
-        auto var = bind[i].second->eval(e2);
+        Value var = bind[i].second->eval(e2);
         modify(bind[i].first, var, e2);
     }
     DEBUG_PRINT("Evaluating body expression.");
     return body->eval(e2);
 }  // letrec expression
 
+// returning a closure with parameters, body, and environment
 Value Lambda::eval(Assoc &env) {
     DEBUG_PRINT("Entering Lambda::eval");
     return ClosureV(x, e, env);
 }  // lambda expression
 
+// by invoking a function or lambda with given arguments
 Value Apply::eval(Assoc &e) {
     DEBUG_PRINT("Entering Apply::eval");
     Value rval = rator->eval(e);
@@ -65,8 +72,9 @@ Value Apply::eval(Assoc &e) {
     Assoc new_env = clos->env;
     std::vector<Value> varss;
     for (int i = 0; i < len2; ++i) {
-        auto tmpval = rand[i]->eval(e);
-        DEBUG_PRINT("Evaluated argument " << i << ", value type: " << tmpval->v_type);
+        Value tmpval = rand[i]->eval(e);
+        DEBUG_PRINT("Evaluated argument "
+                    << i << ", value type: " << tmpval->v_type);
         varss.push_back(tmpval);
     }
     for (int i = 0; i < len2; ++i) {
@@ -75,6 +83,7 @@ Value Apply::eval(Assoc &e) {
     return (clos->e)->eval(new_env);
 }  // for function calling
 
+// Evaluates a `Var` expression by looking up the variable in the environment
 Value Var::eval(Assoc &e) {
     DEBUG_PRINT("Entering Var::eval");
     if (std::isdigit(x[0]) || x[0] == '.' || x[0] == '@') {
@@ -88,16 +97,16 @@ Value Var::eval(Assoc &e) {
     }
 }  // evaluation of variable
 
-Value Fixnum::eval(Assoc &e) { 
+Value Fixnum::eval(Assoc &e) {
     DEBUG_PRINT("Entering Fixnum::eval");
-    return IntegerV(n); }  // evaluation of a fixnum
+    return IntegerV(n);
+}  // evaluation of a fixnum
 
+// checking the condition and evaluating either the consequent or alternative
 Value If::eval(Assoc &e) {
     DEBUG_PRINT("Entering IF::eval");
     Value firstv = cond->eval(e);
-    // auto is2sym = dynamic_cast<Var *>(secondv.get());
-    // auto is3sym = dynamic_cast<Var *>(thirdv.get());
-    auto it = dynamic_cast<Boolean *>(firstv.get());
+    Boolean* it = dynamic_cast<Boolean *>(firstv.get());
     if (it && it->b == false) {
         return alter->eval(e);
     } else {
@@ -116,18 +125,19 @@ Value Begin::eval(Assoc &e) {
         throw RuntimeError("WA");
     }
     for (int i = 0; i < len - 1; ++i) {
-        auto it = es[i].get()->eval(e);
+        Value it = es[i].get()->eval(e);
     }
     return es[len - 1].get()->eval(e);
 }  // begin expression
 
 Value Quote::eval(Assoc &e) {
     DEBUG_PRINT("Entering Quote::eval");
-    auto istrue = dynamic_cast<TrueSyntax *>(s.get());
-    auto isfalse = dynamic_cast<FalseSyntax *>(s.get());
-    auto isnum = dynamic_cast<Number *>(s.get());
-    auto issymbol = dynamic_cast<Identifier *>(s.get());
-    auto islists = dynamic_cast<List *>(s.get());
+    // Check the quoted syntax's type and evaluate accordingly
+    TrueSyntax* istrue = dynamic_cast<TrueSyntax *>(s.get());
+    FalseSyntax* isfalse = dynamic_cast<FalseSyntax *>(s.get());
+    Number* isnum = dynamic_cast<Number *>(s.get());
+    Identifier* issymbol = dynamic_cast<Identifier *>(s.get());
+    List* islists = dynamic_cast<List *>(s.get());
     if (istrue) {
         return BooleanV(true);
     } else if (isfalse) {
@@ -140,31 +150,37 @@ Value Quote::eval(Assoc &e) {
         int len = islists->stxs.size();
         if (len == 0) {
             return NullV();
-        } else if (len == 3) {
-            auto dot = dynamic_cast<Identifier *>(islists->stxs[1].get());
+        } 
+        // Handle dotted pairs (e.g., (a . b))
+        else if (len == 3) {
+            Identifier* dot = dynamic_cast<Identifier *>(islists->stxs[1].get());
             if (dot && dot->s == ".") {
                 return PairV(
                     (Expr(new Quote(islists->stxs[0]))).get()->eval(e),
                     (Expr(new Quote(islists->stxs[2]))).get()->eval(e));
             }
         }
+        // Handle special case lists(e.g.,(cdr(cdr (quote (1 . (2 . 3))))))
         bool isspecial = false;
         Value res = NullV();
-        if (len >= 3) {
-            auto dotp =
+        if (len >= 3) { 
+            Identifier* dotp =
                 dynamic_cast<Identifier *>(islists->stxs[len - 2].get());
             if (dotp && dotp->s == ".") {
                 res = (Expr(new Quote(islists->stxs[len - 1]))).get()->eval(e);
                 isspecial = true;
             }
         }
+        // Evaluate special case lists
         if (isspecial) {
             for (int i = len - 3; i >= 0; --i) {
                 res = PairV((Expr(new Quote(islists->stxs[i]))).get()->eval(e),
                             res);
             }
             return res;
-        } else {
+        } 
+        // Evaluate regular lists
+        else {
             for (int i = len - 1; i >= 0; --i) {
                 res = PairV((Expr(new Quote(islists->stxs[i]))).get()->eval(e),
                             res);
@@ -254,6 +270,7 @@ Value Greater::evalRator(const Value &rand1, const Value &rand2) {
     return BooleanV(false);
 }  // >
 
+// Evaluates equality between two values, supporting different types
 Value IsEq::evalRator(const Value &rand1, const Value &rand2) {
     if (rand1.get() == rand2.get()) {
         return BooleanV(true);
@@ -343,7 +360,7 @@ Value IsProcedure::evalRator(const Value &rand) {
 }  // procedure?
 
 Value Not::evalRator(const Value &rand) {
-    auto isv = dynamic_cast<Boolean *>(rand.get());
+    Boolean* isv = dynamic_cast<Boolean *>(rand.get());
     if (isv && isv->b == false) {
         return BooleanV(true);
     } else {
@@ -352,7 +369,7 @@ Value Not::evalRator(const Value &rand) {
 }  // not
 
 Value Car::evalRator(const Value &rand) {
-    auto pair = dynamic_cast<Pair *>(rand.get());
+    Pair* pair = dynamic_cast<Pair *>(rand.get());
     if (!pair) {
         throw RuntimeError("WA");
     }
@@ -360,7 +377,7 @@ Value Car::evalRator(const Value &rand) {
 }  // car
 
 Value Cdr::evalRator(const Value &rand) {
-    auto pair = dynamic_cast<Pair *>(rand.get());
+    Pair* pair = dynamic_cast<Pair *>(rand.get());
     if (!pair) {
         throw RuntimeError("WA");
     }

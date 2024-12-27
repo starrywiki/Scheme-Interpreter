@@ -24,6 +24,7 @@ extern std ::map<std ::string, ExprType> reserved_words;
 
 Expr Syntax ::parse(Assoc &env) {
     DEBUG_PRINT("Entering Syntax::parse");
+    // Delegates parsing to the derived syntax type
     return get()->parse(env);
 }
 
@@ -40,10 +41,14 @@ Expr FalseSyntax ::parse(Assoc &env) { return Expr(new False()); }
 
 Expr List ::parse(Assoc &env) {
     DEBUG_PRINT("Parsing List with " << stxs.size() << " elements");
+    
+    // Handle empty list case
     if (stxs.empty()) {
         DEBUG_PRINT("Error: Empty list encountered in List::parse");
         throw RuntimeError("WA");
     }
+
+    // Check if the first element is an identifier
     auto id = dynamic_cast<Identifier *>(stxs[0].get());
     if (id == nullptr) {
         DEBUG_PRINT("List first element is not an Identifier");
@@ -56,8 +61,11 @@ Expr List ::parse(Assoc &env) {
         DEBUG_PRINT("Creating Apply expression");
         return Expr(new Apply(ex, exs));
     }
+
     string op = id->s;
     DEBUG_PRINT("List operator: " << op);
+    
+    // Check if the operator exists in the environment
     if (find(op, env).get() != nullptr) {
         DEBUG_PRINT("Operator found in environment: " << op);
         std::vector<Expr> exprs;
@@ -66,6 +74,8 @@ Expr List ::parse(Assoc &env) {
         }
         return Expr(new Apply(stxs[0]->parse(env), exprs));
     }
+
+    // Handle primitive operators
     if (primitives.find(op) != primitives.end()) {
         DEBUG_PRINT("Operator is a primitive: " << op);
         switch (primitives[op]) {
@@ -230,6 +240,8 @@ Expr List ::parse(Assoc &env) {
                 break;
         }
     }
+
+    // Handle reserved words
     if (reserved_words.find(op) != reserved_words.end()) {
         DEBUG_PRINT("Operator is a reserved word: " << op);
         switch (reserved_words[op]) {
@@ -265,36 +277,35 @@ Expr List ::parse(Assoc &env) {
                 if (stxs.size() != 3) {
                     throw RuntimeError("WA");
                 } else {
+                    // Parse the list of variable bindings
                     auto list = dynamic_cast<List *>(stxs[1].get());
                     if (list) {
                         Assoc new_env = env;
+                        // Store variable bindings
                         std ::vector<std ::pair<std ::string, Expr>> to_bind;
                         int len = list->stxs.size();
                         for (int i = 0; i < len; ++i) {
+                            // Parse each binding in the form (var value)
                             auto tmp =
                                 dynamic_cast<List *>(list->stxs[i].get());
                             if ((tmp->stxs).size() != 2)
                                 throw RuntimeError("WA");
+                            // Parse the value expression in the initial environment    
                             auto tmpexpr = tmp->stxs[1]->parse(env);
                             auto tmpvar =
                                 dynamic_cast<Identifier *>(tmp->stxs[0].get());
                             if (!tmpvar) throw RuntimeError("WA");
+                            // Extend the environment with the variable
                             new_env = extend(tmpvar->s,VoidV(),new_env);
                             to_bind.push_back(std::mp(tmpvar->s, tmpexpr));
                         }
+                        // Return it with the bindings and the body
                         return Expr(new Let(to_bind, stxs[2]->parse(new_env)));
                     } else
                         throw RuntimeError("WA");
                 }
                 break;
-/*(letrec
-	([fact
-      	(lambda (n)
-          	(if (= n 0)
-				1
-                (* n (fact (- n 1)))))])
-	(fact 5));*/
-            case E_LETREC:  //?
+            case E_LETREC:  
                 if (stxs.size() != 3) {
                     throw RuntimeError("WA");
                 } else {
@@ -303,6 +314,7 @@ Expr List ::parse(Assoc &env) {
                         Assoc new_env = env;
                         std ::vector<std ::pair<std ::string, Expr>> to_bind;
                         int len = list->stxs.size();
+                        // First pass: Add all variables with uninitialized bindings (VoidV)
                         for (int i = 0; i < len; ++i) {
                             auto tmp =
                                 dynamic_cast<List *>((list->stxs[i]).get());
@@ -311,15 +323,19 @@ Expr List ::parse(Assoc &env) {
                             auto tmpvar =
                                 dynamic_cast<Identifier *>(tmp->stxs[0].get());
                             if (!tmpvar) throw RuntimeError("WA");
+                            // Add uninitialized variable to the environment
                             new_env =
-                                extend(tmpvar->s,VoidV(), new_env);
+                                extend(tmpvar->s,VoidV(), new_env); 
                         }
+
+                        // Second pass: Parse and bind values in the updated environment
                         for (int i = 0; i < len; ++i) {
                             auto tmp =
                                 dynamic_cast<List *>((list->stxs[i]).get());
                             auto tmpvar =
                                 dynamic_cast<Identifier *>(tmp->stxs[0].get());
                             auto tmpexpr = tmp->stxs[1]->parse(new_env);
+                            // Store the binding
                             to_bind.push_back(std::mp(tmpvar->s, tmpexpr));
                         }
                         return Expr(
@@ -328,7 +344,7 @@ Expr List ::parse(Assoc &env) {
                         throw RuntimeError("WA");
                 }
                 break;
-            case E_LAMBDA:  // not finished?
+            case E_LAMBDA:  
                 DEBUG_PRINT("Handling E_LAMBDA");
                 if (stxs.size() != 3) {
                     throw RuntimeError("WA");
@@ -341,6 +357,7 @@ Expr List ::parse(Assoc &env) {
                         string s =
                             dynamic_cast<Identifier *>(varstxs[i].get())->s;
                         vars.push_back(s);
+                        // Add argument to the environment with uninitialized value
                         new_env = extend(s, VoidV(), new_env);
                     }
                     return Expr(new Lambda(vars, stxs[2]->parse(new_env)));
